@@ -1,0 +1,53 @@
+#include <stdio.h>
+#include <string.h>
+#include <openssl/aes.h>
+
+void print_hex(const char *label, const unsigned char *data, size_t len) {
+    printf("%s: ", label);
+    for (size_t i = 0; i < len; i++) {
+        printf("%02x", data[i]);
+    }
+    printf("\n");
+}
+
+void aes_encrypt_ecb(const unsigned char *key, const unsigned char *input, unsigned char *output, size_t length) {
+    AES_KEY aes_key;
+    AES_set_encrypt_key(key, 128, &aes_key);
+    AES_ecb_encrypt(input, output, length, &aes_key, AES_ENCRYPT);
+}
+
+void aes_encrypt_cbc(const unsigned char *key, const unsigned char *iv, const unsigned char *input, unsigned char *output, size_t length) {
+    AES_KEY aes_key;
+    AES_set_encrypt_key(key, 128, &aes_key);
+    AES_cbc_encrypt(input, output, length, &aes_key, iv, AES_ENCRYPT);
+}
+
+void aes_encrypt_cfb(const unsigned char *key, const unsigned char *iv, const unsigned char *input, unsigned char *output, size_t length) {
+    AES_KEY aes_key;
+    AES_set_encrypt_key(key, 128, &aes_key);
+    AES_cfb_encrypt(input, output, length, &aes_key, iv, NULL, AES_ENCRYPT);
+}
+
+int main() {
+    const unsigned char key[] = "1234567890123456";  
+    const unsigned char iv[] = "abcdefghijklmnop"; 
+    const unsigned char plaintext[] = "Hello, encryption!";
+
+    size_t text_len = strlen((char *)plaintext);
+    size_t padded_len = (text_len / AES_BLOCK_SIZE + 1) * AES_BLOCK_SIZE;
+
+    unsigned char encrypted_ecb[padded_len];
+    unsigned char encrypted_cbc[padded_len];
+    unsigned char encrypted_cfb[padded_len];
+
+    aes_encrypt_ecb(key, plaintext, encrypted_ecb, padded_len);
+    aes_encrypt_cbc(key, iv, plaintext, encrypted_cbc, padded_len);
+    aes_encrypt_cfb(key, iv, plaintext, encrypted_cfb, padded_len);
+
+    print_hex("Plaintext", plaintext, text_len);
+    print_hex("ECB Encrypted", encrypted_ecb, padded_len);
+    print_hex("CBC Encrypted", encrypted_cbc, padded_len);
+    print_hex("CFB Encrypted", encrypted_cfb, padded_len);
+
+    return 0;
+}
